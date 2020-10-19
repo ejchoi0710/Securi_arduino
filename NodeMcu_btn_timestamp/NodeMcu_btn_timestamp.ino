@@ -15,16 +15,19 @@
 //FirebaseESP8266.h must be included before ESP8266WiFi.h
 #include "FirebaseESP8266.h"
 #include <ESP8266WiFi.h>
+#include<SoftwareSerial.h> // defining the software serial library
+SoftwareSerial mySerial (D7,D6); // creating the object of the library as mySerial and defining the D7 pin as RX pin and D6 pin as Tx pin
 
 #define FIREBASE_HOST "https://securi-f4c0d.firebaseio.com/"
 #define FIREBASE_AUTH "aL53gG5Y0esOemRmox1ED7MRY8kYRk0fmuC7uKbB"
-#define WIFI_SSID "SK_WiFiGIGA2A98"
-#define WIFI_PASSWORD "1810000573"
+//#define WIFI_SSID "SK_WiFiGIGA2A98"
+//#define WIFI_PASSWORD "1810000573"
+#define WIFI_SSID "AndroidHotspot0871"
+#define WIFI_PASSWORD "12345678"
 const int buttonPin = 4;     // the number of the pushbutton pin
-const int ledPin =  5;       // the number of the LED pin
-// variable for storing the pushbutton status
+const int sensor = 5;
+int state;
 int buttonState = 0;
-//Define Firebase Data object
 FirebaseData firebaseData;
 
 String streampath = "/door";
@@ -32,14 +35,12 @@ void printResult(FirebaseData &data);
 
 void setup()
 {
-  // initialize the pushbutton pin as an input
-  pinMode(buttonPin, INPUT);
-  // initialize the LED pin as an output
-  pinMode(ledPin, OUTPUT); //기본 설정 led끔
   Serial.begin(115200);
   Serial.println();
   Serial.println();
-  
+  pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(sensor,INPUT_PULLUP);
+  mySerial.begin(115200); // starting the software serial
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wi-Fi");
   while (WiFi.status() != WL_CONNECTED)
@@ -107,101 +108,101 @@ void loop()
     Serial.println("------------------------------------");
     Serial.println();
   }
-  
-  // read the state of the pushbutton value
   buttonState = digitalRead(buttonPin);
-  // check if the pushbutton is pressed.
-  // if it is, the buttonState is HIGH
-  if (buttonState == HIGH) {
-    // turn LED on
-    digitalWrite(ledPin, HIGH);
-    String path = "/Test";
-    
-      Serial.println("------------------------------------");
-      Serial.println("Set Timestamp test...");
-    
-      if (Firebase.setTimestamp(firebaseData, path + "/Set/Timestamp"))
-      {
-        Serial.println("PASSED");
-        Serial.println("PATH: " + firebaseData.dataPath());
-        Serial.println("TYPE: " + firebaseData.dataType());
-    
-        //Timestamp saved in millisecond, get its seconds from intData()
-        Serial.print("TIMESTAMP (Seconds): ");
-        Serial.println(firebaseData.intData());
-    
-        //Or print the total milliseconds from doubleData()
-        //Due to bugs in Serial.print in Arduino library, use printf to print double instead.
-        printf("TIMESTAMP (milliSeconds): %.0lf\n", firebaseData.doubleData());
-    
-        //Or print it from payload directly
-        Serial.print("TIMESTAMP (milliSeconds): ");
-        Serial.println(firebaseData.payload());
-    
-        //Due to some internal server error, ETag cannot get from setTimestamp
-        //Try to get ETag manually
-        Serial.println("ETag: " + Firebase.getETag(firebaseData, path + "/Set/Timestamp"));
-        Serial.println("------------------------------------");
-        Serial.println();
-      }
-      else
-      {
-        Serial.println("FAILED");
-        Serial.println("REASON: " + firebaseData.errorReason());
-        Serial.println("------------------------------------");
-        Serial.println();
-      }
-    
-      Serial.println("------------------------------------");
-      Serial.println("Get Timestamp (double of milliseconds) test...");
-    
-      if (Firebase.getDouble(firebaseData, path + "/Set/Timestamp"))
-      {
-        Serial.println("PASSED");
-        Serial.println("PATH: " + firebaseData.dataPath());
-        Serial.println("TYPE: " + firebaseData.dataType());
-    
-        printf("TIMESTAMP: %.0lf\n", firebaseData.doubleData());
-        Serial.println("------------------------------------");
-        Serial.println();
-      }
-      else
-      {
-        Serial.println("FAILED");
-        Serial.println("REASON: " + firebaseData.errorReason());
-        Serial.println("------------------------------------");
-        Serial.println();
-      }
-    
-      Serial.println("------------------------------------");
-      Serial.println("Push Timestamp test...");
-    
-      if (Firebase.pushTimestamp(firebaseData, path + "/Push/Timestamp"))
-      {
-        Serial.println("PASSED");
-        Serial.println("PATH: " + firebaseData.dataPath());
-        Serial.print("PUSH NAME: ");
-        Serial.println(firebaseData.pushName());
-    
-        //Due to some internal server error, ETag cannot get from pushTimestamp
-        //Try to get ETag manually
-        Serial.println("ETag: " + Firebase.getETag(firebaseData, path + "/Push/Timestamp/" + firebaseData.pushName()));
-        Serial.println("------------------------------------");
-        Serial.println();
-      }
-      else
-      {
-        Serial.println("FAILED");
-        Serial.println("REASON: " + firebaseData.errorReason());
-        Serial.println("------------------------------------");
-        Serial.println();
-      }
-
-  } else {
-    // turn LED off
-    digitalWrite(ledPin, LOW);
-  }
-}
+  if (buttonState == LOW) {
+      Serial.println("button pressed");
+      mySerial.println ('a'); //”DATA 1” “DATA2” will be printed on software serial monitor.
+      delay(3000);
+    }
+//  state = digitalRead(sensor);
+//  if(state == HIGH){
+//    String path = "/open"; 
+//    Serial.println("Door open");
+//      Serial.println("------------------------------------");
+//      Serial.println("Set Timestamp test...");
+//    
+//      if (Firebase.setTimestamp(firebaseData, path + "/Set/Timestamp"))
+//      {
+//        Serial.println("PASSED");
+//        Serial.println("PATH: " + firebaseData.dataPath());
+//        Serial.println("TYPE: " + firebaseData.dataType());
+//    
+//        //Timestamp saved in millisecond, get its seconds from intData()
+//        Serial.print("TIMESTAMP (Seconds): ");
+//        Serial.println(firebaseData.intData());
+//    
+//        //Or print the total milliseconds from doubleData()
+//        //Due to bugs in Serial.print in Arduino library, use printf to print double instead.
+//        printf("TIMESTAMP (milliSeconds): %.0lf\n", firebaseData.doubleData());
+//    
+//        //Or print it from payload directly
+//        Serial.print("TIMESTAMP (milliSeconds): ");
+//        Serial.println(firebaseData.payload());
+//    
+//        //Due to some internal server error, ETag cannot get from setTimestamp
+//        //Try to get ETag manually
+//        Serial.println("ETag: " + Firebase.getETag(firebaseData, path + "/Set/Timestamp"));
+//        Serial.println("------------------------------------");
+//        Serial.println();
+//      }
+//      else
+//      {
+//        Serial.println("FAILED");
+//        Serial.println("REASON: " + firebaseData.errorReason());
+//        Serial.println("------------------------------------");
+//        Serial.println();
+//      }
+//    
+//      Serial.println("------------------------------------");
+//      Serial.println("Get Timestamp (double of milliseconds) test...");
+//    
+//      if (Firebase.getDouble(firebaseData, path + "/Set/Timestamp"))
+//      {
+//        Serial.println("PASSED");
+//        Serial.println("PATH: " + firebaseData.dataPath());
+//        Serial.println("TYPE: " + firebaseData.dataType());
+//    
+//        printf("TIMESTAMP: %.0lf\n", firebaseData.doubleData());
+//        Serial.println("------------------------------------");
+//        Serial.println();
+//      }
+//      else
+//      {
+//        Serial.println("FAILED");
+//        Serial.println("REASON: " + firebaseData.errorReason());
+//        Serial.println("------------------------------------");
+//        Serial.println();
+//      }
+//    
+//      Serial.println("------------------------------------");
+//      Serial.println("Push Timestamp test...");
+//    
+//      if (Firebase.pushTimestamp(firebaseData, path + "/Push"))
+//      {
+//        Serial.println("PASSED");
+//        Serial.println("PATH: " + firebaseData.dataPath());
+//        Serial.print("PUSH NAME: ");
+//        Serial.println(firebaseData.pushName());
+//    
+//        //Due to some internal server error, ETag cannot get from pushTimestamp
+//        //Try to get ETag manually
+//        Serial.println("ETag: " + Firebase.getETag(firebaseData, path + "/Push" + firebaseData.pushName()));
+//        Serial.println("------------------------------------");
+//        Serial.println();
+//      }
+//      else
+//      {
+//        Serial.println("FAILED");
+//        Serial.println("REASON: " + firebaseData.errorReason());
+//        Serial.println("------------------------------------");
+//        Serial.println();
+//      }
+//      delay(3000);
+//
+//  } else {
+//    //door 닫힘시 아무것도x
+//  }
+} //loop end
 
 void printResult(FirebaseData &data)
 {
@@ -216,11 +217,38 @@ void printResult(FirebaseData &data)
     Serial.println(data.boolData() == 1 ? "true" : "false");
   else if (data.dataType() == "string")
     Serial.println(data.stringData());
-    //만약 open상태면 led 3초간 켜기
-    if(data.stringData() == "open"){
-      digitalWrite(ledPin, HIGH);
+    if(data.stringData() == "a"){
+      mySerial.println ('a'); //”DATA 1” “DATA2” will be printed on software serial monitor.
       delay(3000);
-      
+    }
+    if(data.stringData() == "b"){
+      mySerial.println ('b'); //”DATA 1” “DATA2” will be printed on software serial monitor.
+      String path = "nfc";
+      Serial.println("------------------------------------");
+    Serial.println("push string...");
+    //"AE-AF-4C-75"(원래) , "AC-AE-1B-42" (new)
+    if (Firebase.pushString(firebaseData, path + "/Push", "AC-AE-1B-42"))
+    {
+      Serial.println("PASSED");
+      Serial.println("PATH: " + firebaseData.dataPath());
+      Serial.println("TYPE: " + firebaseData.dataType());
+      Serial.print("VALUE: ");
+      printResult(firebaseData);
+      Serial.println("------------------------------------");
+      Serial.println();
+    }
+    else
+    {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + firebaseData.errorReason());
+      Serial.println("------------------------------------");
+      Serial.println();
+    }
+      delay(3000);
+    }
+    if(data.stringData() == "c"){
+      mySerial.println ('c'); //”DATA 1” “DATA2” will be printed on software serial monitor.
+      delay(3000);
     }
   else if (data.dataType() == "json")
   {
